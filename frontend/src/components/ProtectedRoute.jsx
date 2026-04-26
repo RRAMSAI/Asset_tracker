@@ -6,8 +6,16 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[var(--color-dark)]">
-        <div className="spinner" />
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          background: 'var(--surface-bg)',
+        }}
+      >
+        <div className="spinner spinner-lg" />
       </div>
     );
   }

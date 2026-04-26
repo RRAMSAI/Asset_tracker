@@ -1,19 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
 const Layout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLg, setIsLg] = useState(window.innerWidth >= 1024);
+
+  useEffect(() => {
+    const onResize = () => setIsLg(window.innerWidth >= 1024);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[var(--color-dark)] relative">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <div style={{ minHeight: '100vh', background: 'var(--surface-bg)', display: 'flex' }}>
+      <Sidebar isOpen={isLg || sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className={`${sidebarOpen ? 'lg:ml-[260px]' : ''} min-h-screen flex flex-col transition-[margin] duration-300 ease-in-out`}>
-        <Navbar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
+      {/* Main content — offset by sidebar on desktop */}
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          marginLeft: isLg ? 'var(--sidebar-width)' : 0,
+          transition: 'margin-left 0.3s ease',
+        }}
+      >
+        <Navbar onMenuToggle={() => setSidebarOpen((o) => !o)} />
 
-        <main className="flex-1 p-6 lg:p-10 w-full flex flex-col items-center">
+        <main
+          style={{
+            flex: 1,
+            padding: '28px 24px',
+            maxWidth: 1200,
+            width: '100%',
+            margin: '0 auto',
+          }}
+        >
           <Outlet />
         </main>
       </div>

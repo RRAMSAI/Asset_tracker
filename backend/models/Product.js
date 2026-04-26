@@ -72,6 +72,34 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    // Admin-set warranty extension pricing
+    extensionPrice: {
+      type: Number,
+      default: 0, // price in INR; 0 means admin hasn't set price yet
+    },
+    extensionDuration: {
+      type: Number,
+      default: 6, // months
+    },
+    // All products are extendable by default; admin can disable per-product
+    isExtendable: {
+      type: Boolean,
+      default: true,
+    },
+
+    // Email notification tracking (prevents duplicate sends)
+    reminderEmailSent: {
+      type: Boolean,
+      default: false,
+    },
+    expiryEmailSent: {
+      type: Boolean,
+      default: false,
+    },
+    extensionCount: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

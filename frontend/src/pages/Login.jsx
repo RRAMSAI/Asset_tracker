@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { HiOutlineShieldCheck, HiOutlineMail, HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
+import {
+  HiOutlineShieldCheck,
+  HiOutlineMail,
+  HiOutlineLockClosed,
+  HiOutlineEye,
+  HiOutlineEyeOff,
+} from 'react-icons/hi';
 import toast, { Toaster } from 'react-hot-toast';
 import { loginUser } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -18,13 +24,12 @@ const Login = () => {
       toast.error('Please fill in all fields');
       return;
     }
-
     setLoading(true);
     try {
       const res = await loginUser(form);
       login(res.data.user, res.data.token);
       toast.success('Welcome back!');
-      setTimeout(() => navigate('/'), 500);
+      setTimeout(() => navigate('/'), 400);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed');
     } finally {
@@ -33,84 +38,204 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-dark)] flex">
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'var(--surface-bg)',
+        display: 'flex',
+      }}
+    >
       <Toaster position="top-right" />
 
-      {/* Left side - branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/10 to-cyan-500/10" />
-        <div className="absolute top-20 left-20 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+      {/* Left panel — branding */}
+      <div
+        className="hide-mobile"
+        style={{
+          width: '44%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          padding: '60px 56px',
+          background: 'var(--surface-base)',
+          borderRight: '1px solid var(--border-subtle)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Subtle background accent */}
+        <div
+          style={{
+            position: 'absolute',
+            top: -120,
+            left: -80,
+            width: 400,
+            height: 400,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(79,110,247,0.08) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            bottom: -100,
+            right: -60,
+            width: 360,
+            height: 360,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(79,110,247,0.05) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }}
+        />
 
-        <div className="relative z-10 max-w-md text-center px-8">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-indigo-500/30">
-            <HiOutlineShieldCheck className="text-white text-4xl" />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 48 }}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--brand-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: 'var(--shadow-brand)',
+              }}
+            >
+              <HiOutlineShieldCheck style={{ color: '#fff', fontSize: 20 }} />
+            </div>
+            <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              WarrantyVault
+            </span>
           </div>
-          <h2 className="text-4xl font-bold mb-4 gradient-text">WarrantyVault</h2>
-          <p className="text-[var(--color-text-secondary)] text-lg leading-relaxed">
-            Track your product warranties, upload invoices, and never miss an expiry date again.
+
+          <h1
+            style={{
+              fontSize: 30,
+              fontWeight: 800,
+              color: 'var(--text-primary)',
+              letterSpacing: '-0.03em',
+              lineHeight: 1.15,
+              marginBottom: 14,
+            }}
+          >
+            Track every warranty.
+            <br />
+            <span style={{ color: 'var(--brand-primary)' }}>Never miss a deadline.</span>
+          </h1>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 40 }}>
+            A professional asset tracking system for managing product warranties, invoices, and maintenance history — all in one place.
           </p>
 
-          <div className="mt-12 grid grid-cols-3 gap-6">
-            {[
-              { num: '100%', label: 'Secure' },
-              { num: '24/7', label: 'Tracking' },
-              { num: 'Smart', label: 'Alerts' },
-            ].map((stat) => (
-              <div key={stat.label} className="glass-card p-4">
-                <p className="text-xl font-bold text-indigo-400">{stat.num}</p>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">{stat.label}</p>
+          {/* Feature bullets */}
+          {[
+            'Automatic warranty expiry tracking',
+            'Invoice & document storage',
+            'Maintenance history logs',
+            'Role-based access control',
+          ].map((f) => (
+            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 'var(--radius-full)',
+                  background: 'var(--brand-primary-muted)',
+                  border: '1px solid var(--brand-primary-border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d="M2 5l2.5 2.5L8 3" stroke="#4f6ef7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
-            ))}
-          </div>
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{f}</span>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Right side - form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
-        <div className="w-full max-w-md animate-fade-in">
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <HiOutlineShieldCheck className="text-white text-xl" />
+      {/* Right panel — form */}
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px 24px',
+        }}
+      >
+        <div style={{ width: '100%', maxWidth: 380 }}>
+          {/* Mobile logo */}
+          <div
+            className="sm:hidden"
+            style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32, justifyContent: 'center' }}
+          >
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--brand-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <HiOutlineShieldCheck style={{ color: '#fff', fontSize: 16 }} />
             </div>
-            <h1 className="text-xl font-bold gradient-text">WarrantyVault</h1>
+            <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)' }}>WarrantyVault</span>
           </div>
 
-          <h2 className="text-2xl font-bold mb-2">Welcome back</h2>
-          <p className="text-[var(--color-text-muted)] mb-8">Sign in to your account to continue</p>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4, letterSpacing: '-0.02em' }}>
+            Sign in
+          </h2>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 28 }}>
+            Enter your credentials to access your dashboard.
+          </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium mb-2 text-[var(--color-text-secondary)]">Email</label>
-              <div className="relative">
-                <HiOutlineMail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Email */}
+            <div className="form-group">
+              <label htmlFor="login-email" className="form-label">Email address</label>
+              <div className="input-wrapper">
+                <HiOutlineMail className="input-icon" />
                 <input
+                  id="login-email"
                   type="email"
+                  className="input input-icon-left"
+                  placeholder="you@company.com"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="input-field !pl-11"
-                  placeholder="you@example.com"
-                  id="login-email"
+                  autoComplete="email"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-[var(--color-text-secondary)]">Password</label>
-              <div className="relative">
-                <HiOutlineLockClosed className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+            {/* Password */}
+            <div className="form-group">
+              <label htmlFor="login-password" className="form-label">Password</label>
+              <div className="input-wrapper">
+                <HiOutlineLockClosed className="input-icon" />
                 <input
+                  id="login-password"
                   type={showPassword ? 'text' : 'password'}
+                  className="input input-icon-left input-icon-right"
+                  placeholder="Enter your password"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="input-field !pl-11 !pr-11"
-                  placeholder="Enter your password"
-                  id="login-password"
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
+                  className="input-icon-end"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <HiOutlineEyeOff /> : <HiOutlineEye />}
                 </button>
@@ -119,33 +244,45 @@ const Login = () => {
 
             <button
               type="submit"
-              disabled={loading}
-              className="btn-primary w-full justify-center py-3 text-base disabled:opacity-50"
               id="login-submit-btn"
+              disabled={loading}
+              className="btn btn-primary btn-lg"
+              style={{ marginTop: 4, width: '100%' }}
             >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                'Sign In'
-              )}
+              {loading ? <div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} /> : 'Sign in'}
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-[var(--color-text-muted)] text-sm">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
-                Create one
-              </Link>
-            </p>
-          </div>
+          <p style={{ marginTop: 24, fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>
+            Don't have an account?{' '}
+            <Link
+              to="/register"
+              style={{ color: 'var(--brand-primary)', fontWeight: 600, textDecoration: 'none' }}
+            >
+              Create account
+            </Link>
+          </p>
 
           {/* Demo credentials */}
-          <div className="mt-6 glass-card p-4">
-            <p className="text-xs font-semibold text-[var(--color-text-muted)] mb-2">Demo Credentials</p>
-            <div className="space-y-1 text-xs text-[var(--color-text-secondary)]">
-              <p>Admin: <span className="text-indigo-400">admin@warranty.com</span> / admin123</p>
-              <p>User: <span className="text-indigo-400">john@warranty.com</span> / user123</p>
+          <div
+            style={{
+              marginTop: 28,
+              padding: '14px 16px',
+              background: 'var(--surface-raised)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-md)',
+            }}
+          >
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+              Demo Credentials
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                Admin: <span className="mono" style={{ color: 'var(--brand-primary)' }}>admin@warranty.com</span> · admin123
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                User: <span className="mono" style={{ color: 'var(--brand-primary)' }}>john@warranty.com</span> · user123
+              </p>
             </div>
           </div>
         </div>

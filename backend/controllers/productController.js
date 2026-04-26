@@ -1,6 +1,8 @@
 const Product = require('../models/Product');
+const User = require('../models/User');
 const fs = require('fs');
 const path = require('path');
+const { sendEmail, productAddedEmail } = require('../utils/emailService');
 
 // @desc    Create product
 // @route   POST /api/products
@@ -16,6 +18,25 @@ exports.createProduct = async (req, res) => {
     }
 
     const product = await Product.create(productData);
+
+    // Send "Product Added" email (async, non-blocking)
+    try {
+      const user = await User.findById(req.user._id);
+      if (user?.email) {
+        const { subject, html } = productAddedEmail({
+          userName: user.name,
+          productName: product.name,
+          brand: product.brand,
+          category: product.category,
+          purchaseDate: product.purchaseDate,
+          warrantyPeriod: product.warrantyPeriod,
+          warrantyExpiryDate: product.warrantyExpiryDate,
+        });
+        sendEmail({ to: user.email, subject, html }); // fire-and-forget
+      }
+    } catch (emailErr) {
+      console.error('📧 Product added email error (non-fatal):', emailErr.message);
+    }
 
     res.status(201).json({ success: true, product });
   } catch (error) {

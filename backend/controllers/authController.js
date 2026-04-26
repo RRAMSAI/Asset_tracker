@@ -110,3 +110,23 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Toggle email notifications
+// @route   PUT /api/auth/notifications/toggle
+exports.toggleNotifications = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.notificationsEnabled = !user.notificationsEnabled;
+    await user.save();
+
+    res.json({
+      success: true,
+      notificationsEnabled: user.notificationsEnabled,
+      message: user.notificationsEnabled ? 'Email notifications enabled' : 'Email notifications disabled',
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

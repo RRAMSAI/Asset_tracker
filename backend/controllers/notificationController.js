@@ -59,70 +59,84 @@ exports.markAllAsRead = async (req, res) => {
   }
 };
 
-// @desc    Generate warranty expiry notifications
+// @desc    Generate warranty expiry notifications and send emails
 exports.generateExpiryNotifications = async () => {
   try {
     const now = new Date();
-    const thirtyDays = new Date();
-    thirtyDays.setDate(thirtyDays.getDate() + 30);
+    
+    // ── 1. Expiring Soon (3 days or less) ──
+    const threeDaysFromNow = new Date();
+    threeDaysFromNow.setDate(now.getDate() + 3);
 
-    // Find expiring soon products (only those that have a user assigned)
     const expiringSoon = await Product.find({
       user: { $ne: null },
-      warrantyExpiryDate: { $gte: now, $lte: thirtyDays },
-    });
+      warrantyExpiryDate: { $gte: now, $lte: threeDaysFromNow },
+      reminderEmailSent: false // Only products that haven't received the reminder
+    }).populate('user', 'name email notificationsEnabled');
 
     for (const product of expiringSoon) {
-      // Check if notification already exists for this product today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const daysLeft = Math.ceil((product.warrantyExpiryDate - now) / (1000 * 60 * 60 * 24));
 
-      const existingNotif = await Notification.findOne({
+      // Create in-app notification
+      await Notification.create({
+        user: product.user._id,
         product: product._id,
         type: 'expiry_warning',
-        createdAt: { $gte: today },
+        message: `Warranty for "${product.name}" expires in ${daysLeft} days (${product.warrantyExpiryDate.toLocaleDateString()})`,
       });
 
-      if (!existingNotif) {
-        const daysLeft = Math.ceil(
-          (product.warrantyExpiryDate - now) / (1000 * 60 * 60 * 24)
-        );
-
-        await Notification.create({
-          user: product.user,
-          product: product._id,
-          type: 'expiry_warning',
-          message: `Warranty for "${product.name}" expires in ${daysLeft} days (${product.warrantyExpiryDate.toLocaleDateString()})`,
+      // Send Email
+      if (product.user.email && product.user.notificationsEnabled !== false) {
+        const { sendEmail, warrantyExpiringSoonEmail } = require('../utils/emailService');
+        const { subject, html } = warrantyExpiringSoonEmail({
+          userName: product.user.name,
+          productName: product.name,
+          brand: product.brand,
+          warrantyExpiryDate: product.warrantyExpiryDate,
+          daysLeft,
         });
+        await sendEmail({ to: product.user.email, subject, html });
       }
+
+      // Mark as sent
+      product.reminderEmailSent = true;
+      await product.save({ validateBeforeSave: false }); // Skip validation just for flag update
     }
 
-    // Find newly expired products (only those that have a user assigned)
+    // ── 2. Expired ──
     const justExpired = await Product.find({
       user: { $ne: null },
-      warrantyExpiryDate: {
-        $lt: now,
-        $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000),
-      },
-    });
+      warrantyExpiryDate: { $lt: now },
+      expiryEmailSent: false // Only products that haven't received the expired email
+    }).populate('user', 'name email notificationsEnabled');
 
     for (const product of justExpired) {
-      const existingNotif = await Notification.findOne({
+      // Create in-app notification
+      await Notification.create({
+        user: product.user._id,
         product: product._id,
         type: 'expired',
+        message: `Warranty for "${product.name}" has expired.`,
       });
 
-      if (!existingNotif) {
-        await Notification.create({
-          user: product.user,
-          product: product._id,
-          type: 'expired',
-          message: `Warranty for "${product.name}" has expired.`,
+      // Send Email
+      if (product.user.email && product.user.notificationsEnabled !== false) {
+        const { sendEmail, warrantyExpiredEmail } = require('../utils/emailService');
+        const { subject, html } = warrantyExpiredEmail({
+          userName: product.user.name,
+          productName: product.name,
+          brand: product.brand,
+          warrantyExpiryDate: product.warrantyExpiryDate,
         });
+        await sendEmail({ to: product.user.email, subject, html });
       }
+
+      // Mark as sent
+      product.expiryEmailSent = true;
+      await product.save({ validateBeforeSave: false });
     }
 
-    console.log('📧 Expiry notifications generated');
+    console.log(`📧 Expiry cron job complete. Reminders sent: ${expiringSoon.length}, Expired sent: ${justExpired.length}`);
   } catch (error) {
     console.error('Notification generation error:', error.message);
   }

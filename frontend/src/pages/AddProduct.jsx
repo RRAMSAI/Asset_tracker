@@ -1,10 +1,34 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HiOutlineUpload, HiOutlineX, HiOutlineCheckCircle } from 'react-icons/hi';
+import {
+  HiOutlineUpload,
+  HiOutlineX,
+  HiOutlineCheckCircle,
+} from 'react-icons/hi';
 import toast, { Toaster } from 'react-hot-toast';
 import { createProduct } from '../services/api';
 
-const categories = ['Electronics', 'Appliances', 'Furniture', 'Automobile', 'Software', 'Other'];
+const CATEGORIES = ['Electronics', 'Appliances', 'Furniture', 'Automobile', 'Software', 'Other'];
+
+const FormSection = ({ title, children }) => (
+  <div style={{ marginBottom: 28 }}>
+    <p
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        color: 'var(--text-muted)',
+        marginBottom: 14,
+        paddingBottom: 10,
+        borderBottom: '1px solid var(--border-subtle)',
+      }}
+    >
+      {title}
+    </p>
+    {children}
+  </div>
+);
 
 const AddProduct = () => {
   const navigate = useNavigate();
@@ -12,8 +36,16 @@ const AddProduct = () => {
   const [loading, setLoading] = useState(false);
   const [fileName, setFileName] = useState('');
   const [form, setForm] = useState({
-    name: '', brand: '', category: 'Electronics', model: '', serialNumber: '',
-    purchaseDate: '', purchasePrice: '', warrantyPeriod: '', retailer: '', notes: '',
+    name: '',
+    brand: '',
+    category: 'Electronics',
+    model: '',
+    serialNumber: '',
+    purchaseDate: '',
+    purchasePrice: '',
+    warrantyPeriod: '',
+    retailer: '',
+    notes: '',
   });
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,7 +57,7 @@ const AddProduct = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.purchaseDate || !form.warrantyPeriod) {
-      return toast.error('Please fill required fields');
+      return toast.error('Name, purchase date and warranty period are required');
     }
     setLoading(true);
     try {
@@ -34,107 +66,250 @@ const AddProduct = () => {
       if (fileRef.current?.files[0]) formData.append('invoiceFile', fileRef.current.files[0]);
       await createProduct(formData);
       toast.success('Product added successfully!');
-      setTimeout(() => navigate('/products'), 800);
+      setTimeout(() => navigate('/products'), 700);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to add product');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="w-full max-w-3xl animate-fade-in">
+    <div className="animate-fade-up" style={{ maxWidth: 720 }}>
       <Toaster position="top-right" />
-      <div className="mb-[24px]">
-        <h1 className="text-3xl font-bold">Add New Product</h1>
-        <p className="text-[var(--color-text-muted)] text-base mt-2">Register a product and its warranty details</p>
+
+      <div className="page-header" style={{ marginBottom: 20 }}>
+        <div>
+          <h1 className="page-title">Add Product</h1>
+          <p className="page-subtitle">Register a new product and its warranty information</p>
+        </div>
       </div>
-      <form onSubmit={handleSubmit} className="glass-card pt-[32px] px-[28px] pb-[24px]">
-        {/* Product Info */}
-        <div className="mb-[28px]">
-          <h3 className="text-sm font-bold mb-[12px] text-indigo-400 uppercase tracking-wider">Product Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-[20px] gap-y-[20px]">
-            <div>
-              <label className="block text-xs font-medium mb-[6px] text-[var(--color-text-secondary)]">Product Name *</label>
-              <input name="name" value={form.name} onChange={handleChange} className="input-field" placeholder="MacBook Pro 16&quot;" id="product-name" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-[6px] text-[var(--color-text-secondary)]">Brand</label>
-              <input name="brand" value={form.brand} onChange={handleChange} className="input-field" placeholder="Apple" id="product-brand" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-[6px] text-[var(--color-text-secondary)]">Category</label>
-              <select name="category" value={form.category} onChange={handleChange} className="select-field" id="product-category">
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-[6px] text-[var(--color-text-secondary)]">Model</label>
-              <input name="model" value={form.model} onChange={handleChange} className="input-field" placeholder="M3 Max" id="product-model" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-[6px] text-[var(--color-text-secondary)]">Serial Number</label>
-              <input name="serialNumber" value={form.serialNumber} onChange={handleChange} className="input-field" placeholder="FVFC2XH1Q6" id="product-serial" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-[6px] text-[var(--color-text-secondary)]">Retailer</label>
-              <input name="retailer" value={form.retailer} onChange={handleChange} className="input-field" placeholder="Apple Store" id="product-retailer" />
-            </div>
-          </div>
-        </div>
 
-        {/* Warranty Info */}
-        <div className="border-t border-[var(--color-dark-border)] pt-[28px] mb-[28px]">
-          <h3 className="text-sm font-bold mb-[12px] text-indigo-400 uppercase tracking-wider">Warranty & Purchase</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-[20px] gap-y-[20px]">
-            <div>
-              <label className="block text-xs font-medium mb-[6px] text-[var(--color-text-secondary)]">Purchase Date *</label>
-              <input type="date" name="purchaseDate" value={form.purchaseDate} onChange={handleChange} className="input-field" id="product-purchase-date" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-[6px] text-[var(--color-text-secondary)]">Warranty Period (months) *</label>
-              <input type="number" name="warrantyPeriod" value={form.warrantyPeriod} onChange={handleChange} className="input-field" placeholder="12" id="product-warranty-period" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-[6px] text-[var(--color-text-secondary)]">Purchase Price ($)</label>
-              <input type="number" name="purchasePrice" value={form.purchasePrice} onChange={handleChange} className="input-field" placeholder="999" id="product-price" />
-            </div>
-          </div>
-        </div>
-
-        {/* Invoice Upload */}
-        <div className="border-t border-[var(--color-dark-border)] pt-[28px] mb-[20px]">
-          <h3 className="text-sm font-bold mb-[12px] text-indigo-400 uppercase tracking-wider">Invoice Upload</h3>
-          <div className="file-upload-zone py-[32px]" onClick={() => fileRef.current?.click()}>
-            <input type="file" ref={fileRef} onChange={handleFile} className="hidden" accept=".pdf,.jpg,.jpeg,.png,.webp" id="invoice-file-input" />
-            {fileName ? (
-              <div className="flex items-center justify-center gap-2 text-emerald-400">
-                <HiOutlineCheckCircle className="text-xl" />
-                <span className="text-sm font-medium">{fileName}</span>
-                <button type="button" onClick={(e) => { e.stopPropagation(); setFileName(''); fileRef.current.value = ''; }} className="ml-2 text-[var(--color-text-muted)] hover:text-red-400">
-                  <HiOutlineX />
-                </button>
+      <form onSubmit={handleSubmit}>
+        <div className="card" style={{ padding: '24px 24px 20px' }}>
+          {/* Product Information */}
+          <FormSection title="Product Information">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px 16px' }}>
+              <div className="form-group">
+                <label htmlFor="product-name" className="form-label">
+                  Product Name <span className="required">*</span>
+                </label>
+                <input
+                  id="product-name"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder='e.g. MacBook Pro 16"'
+                />
               </div>
-            ) : (
-              <>
-                <HiOutlineUpload className="text-3xl text-[var(--color-text-muted)] mx-auto mb-[12px]" />
-                <p className="text-sm text-[var(--color-text-secondary)]">Click to upload invoice</p>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">PDF, JPG, PNG up to 10MB</p>
-              </>
-            )}
+
+              <div className="form-group">
+                <label htmlFor="product-brand" className="form-label">Brand</label>
+                <input
+                  id="product-brand"
+                  name="brand"
+                  value={form.brand}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder="e.g. Apple"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="product-category" className="form-label">Category</label>
+                <select
+                  id="product-category"
+                  name="category"
+                  value={form.category}
+                  onChange={handleChange}
+                  className="select"
+                >
+                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="product-model" className="form-label">Model</label>
+                <input
+                  id="product-model"
+                  name="model"
+                  value={form.model}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder="e.g. M3 Max"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="product-serial" className="form-label">Serial Number</label>
+                <input
+                  id="product-serial"
+                  name="serialNumber"
+                  value={form.serialNumber}
+                  onChange={handleChange}
+                  className="input mono"
+                  placeholder="e.g. FVFC2XH1Q6"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="product-retailer" className="form-label">Retailer</label>
+                <input
+                  id="product-retailer"
+                  name="retailer"
+                  value={form.retailer}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder="e.g. Apple Store"
+                />
+              </div>
+            </div>
+          </FormSection>
+
+          {/* Warranty & Purchase */}
+          <FormSection title="Warranty & Purchase">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px 16px' }}>
+              <div className="form-group">
+                <label htmlFor="product-purchase-date" className="form-label">
+                  Purchase Date <span className="required">*</span>
+                </label>
+                <input
+                  id="product-purchase-date"
+                  type="date"
+                  name="purchaseDate"
+                  value={form.purchaseDate}
+                  onChange={handleChange}
+                  className="input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="product-warranty-period" className="form-label">
+                  Warranty (months) <span className="required">*</span>
+                </label>
+                <input
+                  id="product-warranty-period"
+                  type="number"
+                  name="warrantyPeriod"
+                  value={form.warrantyPeriod}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder="12"
+                  min="1"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="product-price" className="form-label">Purchase Price (₹)</label>
+                <input
+                  id="product-price"
+                  type="number"
+                  name="purchasePrice"
+                  value={form.purchasePrice}
+                  onChange={handleChange}
+                  className="input"
+                  placeholder="999"
+                  min="0"
+                />
+              </div>
+            </div>
+          </FormSection>
+
+          {/* Invoice Upload */}
+          <FormSection title="Invoice Upload">
+            <div
+              className="upload-zone"
+              onClick={() => fileRef.current?.click()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && fileRef.current?.click()}
+              aria-label="Upload invoice file"
+            >
+              <input
+                type="file"
+                ref={fileRef}
+                onChange={handleFile}
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                id="invoice-file-input"
+                style={{ display: 'none' }}
+              />
+
+              {fileName ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                  <HiOutlineCheckCircle style={{ fontSize: 22, color: 'var(--status-success)', flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{fileName}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFileName('');
+                      if (fileRef.current) fileRef.current.value = '';
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 2,
+                      color: 'var(--text-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                    aria-label="Remove file"
+                  >
+                    <HiOutlineX style={{ fontSize: 16 }} />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <HiOutlineUpload style={{ fontSize: 26, color: 'var(--text-muted)', display: 'block', margin: '0 auto 10px' }} />
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>
+                    Click to upload invoice or receipt
+                  </p>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>PDF, JPG, PNG — up to 10 MB</p>
+                </>
+              )}
+            </div>
+          </FormSection>
+
+          {/* Notes */}
+          <div className="form-group" style={{ marginBottom: 24 }}>
+            <label htmlFor="product-notes" className="form-label">Additional Notes</label>
+            <textarea
+              id="product-notes"
+              name="notes"
+              value={form.notes}
+              onChange={handleChange}
+              className="input"
+              placeholder="Any additional information about this product..."
+              style={{ minHeight: 80, resize: 'vertical' }}
+            />
           </div>
-        </div>
 
-        {/* Notes */}
-        <div className="mt-[20px]">
-          <label className="block text-xs font-medium mb-[6px] text-[var(--color-text-secondary)]">Notes</label>
-          <textarea name="notes" value={form.notes} onChange={handleChange} className="input-field resize-none p-[12px] min-h-[80px]" placeholder="Additional notes..." id="product-notes" />
-        </div>
-
-        {/* Submit */}
-        <div className="flex gap-[12px] mt-[24px]">
-          <button type="submit" disabled={loading} className="btn-primary flex-1 justify-center h-[48px] text-[15px] font-medium disabled:opacity-50" id="add-product-submit">
-            {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Add Product'}
-          </button>
-          <button type="button" onClick={() => navigate('/products')} className="btn-secondary px-8 h-[48px] text-[15px] font-medium">Cancel</button>
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
+            <button
+              type="submit"
+              id="add-product-submit"
+              disabled={loading}
+              className="btn btn-primary btn-lg"
+              style={{ flex: 1 }}
+            >
+              {loading
+                ? <div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
+                : 'Add Product'
+              }
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/products')}
+              className="btn btn-secondary btn-lg"
+              style={{ minWidth: 100 }}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </form>
     </div>
