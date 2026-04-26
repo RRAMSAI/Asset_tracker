@@ -7,13 +7,13 @@ exports.addMaintenance = async (req, res) => {
   try {
     const { product: productId } = req.body;
 
-    // Verify product exists and user owns it
+    // Verify product exists and user owns it (or is admin)
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    if (req.user.role !== 'admin' && product.user.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
+    if (req.user.role !== 'admin' && product.user && product.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to access this product' });
     }
 
     const record = await MaintenanceHistory.create({
@@ -27,7 +27,7 @@ exports.addMaintenance = async (req, res) => {
   }
 };
 
-// @desc    Get all maintenance records
+// @desc    Get all maintenance records (admin sees all, user sees own)
 // @route   GET /api/maintenance
 exports.getMaintenanceRecords = async (req, res) => {
   try {
@@ -56,7 +56,7 @@ exports.getMaintenanceRecord = async (req, res) => {
       return res.status(404).json({ message: 'Record not found' });
     }
 
-    if (req.user.role !== 'admin' && record.user.toString() !== req.user._id.toString()) {
+    if (req.user.role !== 'admin' && record.user && record.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -76,7 +76,7 @@ exports.deleteMaintenance = async (req, res) => {
       return res.status(404).json({ message: 'Record not found' });
     }
 
-    if (req.user.role !== 'admin' && record.user.toString() !== req.user._id.toString()) {
+    if (req.user.role !== 'admin' && record.user && record.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 

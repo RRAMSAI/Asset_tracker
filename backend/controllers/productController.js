@@ -23,14 +23,14 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-// @desc    Get all products for user
+// @desc    Get all products (admin sees all, user sees own)
 // @route   GET /api/products
 exports.getProducts = async (req, res) => {
   try {
     const { status, category, search, sort } = req.query;
     const query = {};
 
-    // Admin sees all, user sees own
+    // Role-based access: admin sees ALL products, regular user sees ONLY their own
     if (req.user.role !== 'admin') {
       query.user = req.user._id;
     }
@@ -50,12 +50,11 @@ exports.getProducts = async (req, res) => {
     if (sort === 'expiry') sortOption = { warrantyExpiryDate: 1 };
     if (sort === 'purchase') sortOption = { purchaseDate: -1 };
 
-    // Update statuses before fetching
     const products = await Product.find(query)
       .sort(sortOption)
       .populate('user', 'name email');
 
-    // Update statuses on the fly
+    // Update warranty statuses on the fly
     const updatedProducts = products.map((p) => {
       const doc = p.toObject();
       const now = new Date();
@@ -86,9 +85,9 @@ exports.getProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Check ownership
-    if (req.user.role !== 'admin' && product.user._id.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
+    // Check ownership (admin can view any, user can only view their own)
+    if (req.user.role !== 'admin' && product.user && product.user._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to view this product' });
     }
 
     res.json({ success: true, product });
@@ -107,8 +106,9 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    if (req.user.role !== 'admin' && product.user.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
+    // Check ownership (admin can update any, user can only update their own)
+    if (req.user.role !== 'admin' && product.user && product.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this product' });
     }
 
     const updateData = { ...req.body };
@@ -162,8 +162,9 @@ exports.deleteProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    if (req.user.role !== 'admin' && product.user.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized' });
+    // Check ownership (admin can delete any, user can only delete their own)
+    if (req.user.role !== 'admin' && product.user && product.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this product' });
     }
 
     // Delete invoice file
@@ -180,7 +181,7 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-// @desc    Get dashboard stats
+// @desc    Get dashboard stats (admin sees all, user sees own)
 // @route   GET /api/products/stats/dashboard
 exports.getDashboardStats = async (req, res) => {
   try {

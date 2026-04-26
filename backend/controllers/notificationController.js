@@ -66,8 +66,9 @@ exports.generateExpiryNotifications = async () => {
     const thirtyDays = new Date();
     thirtyDays.setDate(thirtyDays.getDate() + 30);
 
-    // Find expiring soon products
+    // Find expiring soon products (only those that have a user assigned)
     const expiringSoon = await Product.find({
+      user: { $ne: null },
       warrantyExpiryDate: { $gte: now, $lte: thirtyDays },
     });
 
@@ -96,8 +97,9 @@ exports.generateExpiryNotifications = async () => {
       }
     }
 
-    // Find newly expired products
+    // Find newly expired products (only those that have a user assigned)
     const justExpired = await Product.find({
+      user: { $ne: null },
       warrantyExpiryDate: {
         $lt: now,
         $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000),
