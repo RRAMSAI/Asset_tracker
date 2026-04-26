@@ -89,18 +89,14 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// Serve Frontend in Production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+// Serve Frontend statically if the dist folder exists
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
-  app.get('*', (req, res) =>
-    res.sendFile(
-      path.resolve(__dirname, '../', 'frontend', 'dist', 'index.html')
-    )
+app.get('*', (req, res) => {
+  res.sendFile(
+    path.resolve(__dirname, '../', 'frontend', 'dist', 'index.html')
   );
-} else {
-  app.get('/', (req, res) => res.send('Please set to production'));
-}
+});
 
 const PORT = process.env.PORT || 5000;
 
