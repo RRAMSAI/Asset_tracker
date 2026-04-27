@@ -39,6 +39,23 @@ app.use(express.urlencoded({ extended: true }));
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Health check — ABOVE DB middleware so it always works
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Debug endpoint — shows what env vars Vercel actually has (no secrets exposed)
+app.get('/api/debug', (req, res) => {
+  res.json({
+    vercel: !!process.env.VERCEL,
+    node_env: process.env.NODE_ENV,
+    mongodb_uri_set: !!process.env.MONGODB_URI,
+    mongodb_uri_preview: process.env.MONGODB_URI ? process.env.MONGODB_URI.slice(0, 30) + '...' : 'NOT SET',
+    jwt_secret_set: !!process.env.JWT_SECRET,
+    client_url: process.env.CLIENT_URL || 'NOT SET',
+  });
+});
+
 // ── Connect DB before each request (serverless-safe) ──
 app.use(async (req, res, next) => {
   try {
@@ -46,7 +63,7 @@ app.use(async (req, res, next) => {
     next();
   } catch (err) {
     console.error('DB connection failed:', err.message);
-    return res.status(500).json({ message: 'Database connection failed. Check MONGODB_URI env var on Vercel.' });
+    return res.status(500).json({ message: 'Database connection failed', error: err.message });
   }
 });
 
@@ -58,11 +75,6 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/service-requests', require('./routes/serviceRequests'));
 app.use('/api/settings', require('./routes/settings'));
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
 
 // Config check — verifies .env keys are loaded (never exposes full secrets)
 app.get('/api/config-check', (req, res) => {
