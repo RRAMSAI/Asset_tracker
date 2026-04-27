@@ -26,7 +26,8 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:3000',
-    process.env.CLIENT_URL,           // set on Render: https://asset-tracker-eosin.vercel.app
+    'https://asset-tracker-eosin.vercel.app',
+    process.env.CLIENT_URL,
   ].filter(Boolean),
   credentials: true,
 }));
