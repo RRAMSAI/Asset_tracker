@@ -263,28 +263,7 @@ const Login = () => {
             </Link>
           </p>
 
-          {/* Demo credentials */}
-          <div
-            style={{
-              marginTop: 28,
-              padding: '14px 16px',
-              background: 'var(--surface-raised)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-md)',
-            }}
-          >
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-              Demo Credentials
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                Admin: <span className="mono" style={{ color: 'var(--brand-primary)' }}>admin@warranty.com</span> · admin123
-              </p>
-              <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                User: <span className="mono" style={{ color: 'var(--brand-primary)' }}>john@warranty.com</span> · user123
-              </p>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>
