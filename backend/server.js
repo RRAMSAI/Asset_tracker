@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const cron = require('node-cron');
 
 // Load .env from the backend directory explicitly — resolves issues with CWD mismatch
 require('dotenv').config({ path: path.join(__dirname, '.env') });
@@ -16,12 +15,9 @@ console.log('  RAZORPAY_SECRET   =', process.env.RAZORPAY_KEY_SECRET ? process.e
 const connectDB = require('./config/db');
 const { generateExpiryNotifications } = require('./controllers/notificationController');
 
-// Connect to database
-connectDB();
-
 const app = express();
 
-// Middleware
+// ── CORS — must be FIRST middleware so headers are always sent ──
 app.use(cors({
   origin: [
     'http://localhost:5173',
@@ -30,12 +26,29 @@ app.use(cors({
     process.env.CLIENT_URL,
   ].filter(Boolean),
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// Handle preflight OPTIONS requests explicitly
+app.options('*', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ── Connect DB before each request (serverless-safe) ──
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('DB connection failed:', err.message);
+    return res.status(500).json({ message: 'Database connection failed. Check MONGODB_URI env var on Vercel.' });
+  }
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -74,11 +87,15 @@ app.get('/api/config-check', (req, res) => {
   });
 });
 
-// Scheduled job - Check expiry notifications daily at 9 AM
-cron.schedule('0 9 * * *', () => {
-  console.log('⏰ Running daily warranty expiry check...');
-  generateExpiryNotifications();
-});
+// ── node-cron only works in persistent servers, NOT in Vercel serverless ──
+// Run it only when NOT on Vercel
+if (!process.env.VERCEL) {
+  const cron = require('node-cron');
+  cron.schedule('0 9 * * *', () => {
+    console.log('⏰ Running daily warranty expiry check...');
+    generateExpiryNotifications();
+  });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -94,22 +111,20 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// Serve Frontend statically if the dist folder exists
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
+// ── Local dev: start HTTP server. Vercel: export the app ──
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  // Connect once at startup for local dev
+  connectDB();
 
-app.get('*', (req, res) => {
-  res.sendFile(
-    path.resolve(__dirname, '../', 'frontend', 'dist', 'index.html')
-  );
-});
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+    console.log(`📂 Uploads directory: ${path.join(__dirname, 'uploads')}`);
+  });
+}
 
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-  console.log(`📂 Uploads directory: ${path.join(__dirname, 'uploads')}`);
-});
-
+// Required for Vercel serverless
+module.exports = app;
 
 
 
